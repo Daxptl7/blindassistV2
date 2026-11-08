@@ -1,0 +1,13 @@
+# Android and IDE generated files
+.gradle/
+**/build/
+local.properties
+.idea/
+*.apk
+*.aab
+*.keystore
+*.jks
+# Credentials
+*.env
+.env
+secrets.properties

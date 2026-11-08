@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">ब्लाइंडअसिस्ट</string>
+    <string name="welcome_message">ब्लाइंडअसिस्ट टर्मिनल के लिए आपका सुलभ साथी ऐप।</string>
+    <string name="offline_explanation">टर्मिनल स्वतंत्र रूप से काम करता है। फ़ोन कनेक्शन अगले चरण में जोड़ा जाएगा।</string>
+    <string name="get_started">शुरू करें</string>
+    <string name="home">होम</string><string name="devices">डिवाइस</string>
+    <string name="features">सुविधाएँ</string><string name="settings">सेटिंग्स</string>
+    <string name="about">परिचय</string><string name="back">वापस</string>
+    <string name="device_not_connected">कोई टर्मिनल कनेक्ट नहीं है</string>
+    <string name="connection_coming">ब्लूटूथ पेयरिंग अभी उपलब्ध नहीं है।</string>
+    <string name="transport_unavailable">इस संस्करण में डिवाइस कनेक्टिविटी उपलब्ध नहीं है।</string>
+    <string name="features_info">ये प्रस्तावित टर्मिनल नियंत्रण हैं। अगले चरण में जुड़े टर्मिनल की सुविधाएँ सत्यापित की जाएँगी।</string>
+    <string name="remote_unavailable">ऐप से नियंत्रण अभी उपलब्ध नहीं है</string>
+    <string name="feature_ocr">ओसीआर रीडिंग</string><string name="feature_morse">मोर्स एआई</string>
+    <string name="feature_voice">वॉइस सहायता</string><string name="feature_translation">अनुवाद</string>
+    <string name="feature_gesture">जेस्चर पहचान</string><string name="feature_object">वस्तु पहचान</string>
+    <string name="feature_gps">जीपीएस सहायता</string><string name="feature_confidential">निजी ऑडियो</string>
+    <string name="feature_math">गणित</string>
+    <string name="appearance">दिखावट</string><string name="system">सिस्टम डिफ़ॉल्ट</string>
+    <string name="light">लाइट</string><string name="dark">डार्क</string>
+    <string name="language">भाषा</string>
+    <string name="about_content">ब्लाइंडअसिस्ट एंड्रॉइड साथी ऐप, चरण 3। ऑफलाइन ऐप आधार; डिवाइस संचार अभी लागू नहीं किया गया है।</string>
+</resources>
