@@ -2,7 +2,6 @@
 from dataclasses import dataclass
 import json
 import re
-import socket
 import struct
 import time
 
@@ -139,7 +138,7 @@ class IpcRequest:
     def public_metadata(self, value):
         if isinstance(value, dict):
             return {key: (item[len(self.prefix):] if isinstance(item, str) and item.startswith(self.prefix)
-                          else None if item is not None else None)
+                          else None)
                     if key in {"request_id", "active_request_id", "target_request_id"}
                     else self.public_metadata(item) for key, item in value.items()}
         if isinstance(value, list):

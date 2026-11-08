@@ -34,7 +34,12 @@ class IpcClient:
                                            "principal_id": principal_id, "payload": payload or {}},
                                REQUEST_LIMIT, deadline)
                     connection.shutdown(socket.SHUT_WR)
-                    response = receive_frame(connection, RESPONSE_LIMIT, deadline, require_eof=True)
+                    try:
+                        response = receive_frame(connection, RESPONSE_LIMIT, deadline, require_eof=True)
+                    except GatewayError as error:
+                        if error.code == "COMMAND_TIMEOUT":
+                            raise
+                        raise GatewayError("INVALID_IPC_RESPONSE", 502) from None
             except (TimeoutError, socket.timeout):
                 raise GatewayError("COMMAND_TIMEOUT", 504) from None
             except OSError:

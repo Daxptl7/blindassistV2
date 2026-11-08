@@ -113,11 +113,15 @@ class IpcServer:
                 response = {"protocol_version": VERSION, "ok": True, "data": data}
             except GatewayError as error:
                 response = {"protocol_version": VERSION, "ok": False, "error_code": error.code}
-            except (OSError, TimeoutError):
+            except TimeoutError:
+                response = {"protocol_version": VERSION, "ok": False, "error_code": "COMMAND_TIMEOUT"}
+            except OSError:
                 return
             except Exception:
                 response = {"protocol_version": VERSION, "ok": False, "error_code": "INTERNAL_ERROR"}
-            send_frame(connection, response, RESPONSE_LIMIT, deadline)
+            # A fixed error frame gets a short, separate write budget after a read deadline.
+            send_frame(connection, response, RESPONSE_LIMIT,
+                       max(deadline, time.monotonic() + 0.05) if not response["ok"] else deadline)
         except (OSError, GatewayError):
             pass
         finally:
