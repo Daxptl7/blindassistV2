@@ -33,3 +33,42 @@ logs/
 # Device-local persistent state and generated deployment locks
 runtime/
 deployment.lock.txt
+
+# Optional Android companion: local tooling, builds and signing material
+/android-app/.gradle/
+/android-app/.kotlin/
+/android-app/.idea/
+/android-app/**/build/
+/android-app/**/.cxx/
+/android-app/**/.externalNativeBuild/
+/android-app/**/local.properties
+/android-app/**/keystore.properties
+/android-app/**/signing.properties
+/android-app/**/*.jks
+/android-app/**/*.keystore
+/android-app/**/*.apk
+/android-app/**/*.aab
+/android-app/**/*.hprof
+/android-app/**/credentials.*
+/android-app/**/secrets.*
+/android-app/**/.env.*
+/android-app/**/private-documents/
+/android-app/**/recordings/
+
+# Future gateway: device-local state, credentials and private staging
+/gateway/.env.*
+/gateway/**/config.local.*
+/gateway/**/credentials.*
+/gateway/**/secrets.*
+/gateway/runtime/
+/gateway/uploads/
+/gateway/private-documents/
+/gateway/recordings/
+
+# Companion/gateway private key material (never source assets)
+/android-app/**/*.key
+/android-app/**/*.pem
+/android-app/**/*.p12
+/gateway/**/*.key
+/gateway/**/*.pem
+/gateway/**/*.p12
