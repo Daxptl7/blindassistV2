@@ -1,26 +1,16 @@
-# BlindAssist mobile gateway — PLANNED
+# BlindAssist optional local gateway — Phase 2
 
-Phase 0 reserves this directory only. There is no Python service, listener,
-transport, pairing logic, command execution, hardware import or dependency file.
-The terminal starts using its existing instructions without this directory.
+The independent FastAPI process binds to `127.0.0.1:8765` by default and reaches
+the existing terminal-owned Phase 1 broker through a private Unix socket.
+It never imports `main.py`, opens hardware, executes modes or starts a terminal.
+The terminal socket is disabled unless `BLINDASSIST_IPC_ENABLED=1`.
 
-Later phases may add authentication, phone association, strict protocol
-validation, BLE/local Wi-Fi adapters and sanitized status/results. Forward
-permitted requests to a broker at the existing terminal execution boundary;
-the gateway must never open the Pico serial port, take camera/microphone/audio
-ownership, import/run another copy of `main.py`, invoke feature modules directly,
-or initialize an AI/RAG pipeline. Failure or absence of the gateway must leave
-physical terminal use independent.
+- [Setup and architecture](../docs/MOBILE_PHASE2_GATEWAY.md)
+- [Six-route API](../docs/MOBILE_PHASE2_API.md)
+- [Credentials, authorization and privacy](../docs/MOBILE_PHASE2_SECURITY.md)
+- [Actual test results](../docs/MOBILE_PHASE2_TEST_RESULTS.md)
+- [Phase 3 handoff](../docs/MOBILE_PHASE2_HANDOFF.md)
 
-The broker/IPC process boundary, identity provisioning and interactive mode-input
-adapters still require design and validation. Protocol examples do not authorize
-an implementation during Phase 0.
-
-- [Verified current terminal architecture](../docs/MOBILE_PHASE0_AUDIT.md)
-- [Planned boundaries and capability matrix](../docs/MOBILE_ARCHITECTURE.md)
-- [Proposed protocol 1.0](../docs/MOBILE_PROTOCOL.md)
-- [Phase 1 handoff and regression requirements](../docs/MOBILE_PHASE0_HANDOFF.md)
-
-Keep credentials, local configuration, private document/audio staging and runtime
-state outside version control. No device service/startup changes belong here in
-Phase 0.
+Earlier phase documents describe their historical scope. Android, BLE, phone
+pairing, LAN access, results transfer and document synchronization remain outside
+Phase 2. Keep credentials and private runtime files outside version control.

@@ -14,7 +14,7 @@ Group=blindassist
 WorkingDirectory=/opt/blindassist
 Environment=BLINDASSIST_IPC_DIRECTORY=/run/blindassist-gateway
 Environment=BLINDASSIST_CREDENTIAL_DIRECTORY=/opt/blindassist/runtime/mobile-gateway
-ExecStart=/opt/blindassist/.venv-gateway/bin/python -m gateway.server
+ExecStart=/opt/blindassist/runtime/gateway-venv/bin/python -m gateway.server
 UMask=0077
 NoNewPrivileges=true
 PrivateTmp=true
