@@ -1,4 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">બ્લાઇન્ડઅસિસ્ટ સાથી</string>
+    <string name="app_name">બ્લાઇન્ડઅસિસ્ટ</string>
+    <string name="welcome_message">બ્લાઇન્ડઅસિસ્ટ ટર્મિનલ માટે તમારી સુલભ સાથી એપ્લિકેશન.</string>
+    <string name="offline_explanation">ટર્મિનલ સ્વતંત્ર રીતે કામ કરે છે. ફોન કનેક્શન આગળના તબક્કામાં ઉમેરાશે.</string>
+    <string name="get_started">શરૂ કરો</string>
+    <string name="home">હોમ</string><string name="devices">ઉપકરણો</string>
+    <string name="features">સુવિધાઓ</string><string name="settings">સેટિંગ્સ</string>
+    <string name="about">વિશે</string><string name="back">પાછળ</string>
+    <string name="device_not_connected">કોઈ ટર્મિનલ જોડાયેલ નથી</string>
+    <string name="connection_coming">બ્લૂટૂથ પેરિંગ હજી ઉપલબ્ધ નથી.</string>
+    <string name="transport_unavailable">આ આવૃત્તિમાં ઉપકરણ કનેક્ટિવિટી ઉપલબ્ધ નથી.</string>
+    <string name="features_info">આ આયોજન કરેલા ટર્મિનલ નિયંત્રણો છે. આગળના તબક્કામાં જોડાયેલા ટર્મિનલની ક્ષમતાઓ તપાસાશે.</string>
+    <string name="remote_unavailable">એપમાંથી નિયંત્રણ હજી ઉપલબ્ધ નથી</string>
+    <string name="feature_ocr">ઓસીઆર વાંચન</string><string name="feature_morse">મોર્સ એઆઇ</string>
+    <string name="feature_voice">અવાજ સહાય</string><string name="feature_translation">અનુવાદ</string>
+    <string name="feature_gesture">હાવભાવ ઓળખ</string><string name="feature_object">વસ્તુ ઓળખ</string>
+    <string name="feature_gps">જીપીએસ સહાય</string><string name="feature_confidential">ખાનગી ઑડિયો</string>
+    <string name="feature_math">ગણિત</string>
+    <string name="appearance">દેખાવ</string><string name="system">સિસ્ટમ ડિફૉલ્ટ</string>
+    <string name="light">લાઇટ</string><string name="dark">ડાર્ક</string>
+    <string name="language">ભાષા</string>
+    <string name="about_content">બ્લાઇન્ડઅસિસ્ટ એન્ડ્રોઇડ સાથી એપ, તબક્કો 3. ઑફલાઇન એપ આધાર; ઉપકરણ સંચાર હજી અમલમાં નથી.</string>
 </resources>

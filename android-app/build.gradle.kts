@@ -1,4 +1,8 @@
 plugins {
-    // AGP 9 includes Kotlin support; do not also apply kotlin-android.
-    id("com.android.application") version "9.3.3" apply false
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.hilt.android) apply false
+    alias(libs.plugins.kotlin.kapt) apply false
 }

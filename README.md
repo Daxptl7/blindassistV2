@@ -1,5 +1,17 @@
 # 👁️ BlindAssist — Accessible Educational & Assistive Terminal
 
+## Android companion and optional gateway
+
+This repository includes the standalone Raspberry Pi terminal, the Phase 1 command
+broker, the Phase 2 loopback gateway, and the Android Phase 3 foundation.
+Android currently reports disconnected status; pairing and remote terminal
+control are not implemented. The terminal remains independently usable.
+
+- [Android architecture](docs/MOBILE_PHASE3_ANDROID_ARCHITECTURE.md)
+- [Android accessibility and translations](docs/MOBILE_PHASE3_ACCESSIBILITY.md)
+- [Gateway setup and security](docs/MOBILE_PHASE2_GATEWAY.md)
+- [Gateway API contract](docs/MOBILE_PHASE2_API.md)
+
 [![Project Status](https://img.shields.io/badge/status-device--validation--required-orange.svg)](docs/DEPLOYMENT.md)
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.13-blue.svg)](#)
 [![Hardware Target](https://img.shields.io/badge/hardware-macOS%20%7C%20Raspberry%20Pi%205-red.svg)](#)

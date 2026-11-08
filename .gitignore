@@ -72,3 +72,18 @@ deployment.lock.txt
 /gateway/**/*.key
 /gateway/**/*.pem
 /gateway/**/*.p12
+
+# Preserve Android main-branch generated-file rules
+# Android and IDE generated files
+.gradle/
+**/build/
+local.properties
+.idea/
+*.apk
+*.aab
+*.keystore
+*.jks
+# Credentials
+*.env
+.env
+secrets.properties
