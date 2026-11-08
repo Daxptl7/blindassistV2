@@ -60,7 +60,8 @@ def controller():
     names = {"_command_capabilities", "_initialize_command_dispatcher", "_disable_command_dispatcher",
              "_execute_broker_request", "_physical_mode_request", "run_mode", "_run_mode",
              "_cooperative_menu_choice", "_get_menu_choice", "_has_any_input_device", "main",
-             "shutdown", "_has", "_object_detection_stop_requested"}
+             "shutdown", "_has", "_object_detection_stop_requested",
+             "_initialize_terminal_ipc", "_close_terminal_ipc"}
     tree = ast.parse((ROOT / "main.py").read_text())
     selected = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
     assert {node.name for node in selected} == names
@@ -69,7 +70,8 @@ def controller():
     module.__dict__.update({
         "threading": threading, "time": clock, "sys": sys, "BASE_DIR": ROOT,
         "PUBLIC": PUBLIC, "current_policy": current_policy, "processing_session": processing_session,
-        "_command_broker": None, "_mode_execution_thread": threading.current_thread(),
+        "_command_broker": None, "_terminal_ipc_server": None,
+        "_mode_execution_thread": threading.current_thread(),
         "_mode_execution_depth": 0, "_dispatching_request_id": None, "_mode_failed": False,
         "_shutdown_done": False, "_settings": {"enabled_modes": list("12345689")},
         "_modules": {name: mock.Mock() for name in ("ocr", "voice", "ai_query", "morse", "tts",

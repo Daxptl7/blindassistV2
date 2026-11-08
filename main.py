@@ -62,6 +62,7 @@ _shutdown_done = False
 
 # Internal admission only: no transport or new hardware controller.
 _command_broker = None
+_terminal_ipc_server = None
 _mode_execution_thread = threading.current_thread()
 _mode_execution_depth = 0
 _dispatching_request_id = None
@@ -1726,6 +1727,7 @@ def _initialize_command_dispatcher():
 
 def _disable_command_dispatcher():
     global _command_broker
+    _close_terminal_ipc()
     broker, _command_broker = _command_broker, None
     if broker is not None:
         try:
@@ -1733,6 +1735,35 @@ def _disable_command_dispatcher():
         except Exception:
             pass
     logger.warning("Internal dispatcher disabled; keeping standalone input.")
+
+
+def _initialize_terminal_ipc():
+    """Explicit opt-in only; failure must leave physical standalone input available."""
+    global _terminal_ipc_server
+    import os
+    if os.environ.get("BLINDASSIST_IPC_ENABLED") != "1" or _command_broker is None:
+        return
+    if _terminal_ipc_server is not None:
+        return
+    try:
+        from gateway.config import GatewaySettings
+        from gateway.ipc_server import IpcServer
+        settings = GatewaySettings(ipc_directory=os.environ.get(
+            "BLINDASSIST_IPC_DIRECTORY", GatewaySettings().ipc_directory))
+        _terminal_ipc_server = IpcServer(_command_broker, settings).start()
+        logger.info("Optional terminal IPC enabled.")
+    except Exception:
+        logger.warning("Optional terminal IPC unavailable; keeping standalone input.")
+
+
+def _close_terminal_ipc():
+    global _terminal_ipc_server
+    server, _terminal_ipc_server = _terminal_ipc_server, None
+    if server is not None:
+        try:
+            server.close()
+        except Exception:
+            logger.warning("Optional terminal IPC cleanup could not finish.")
 
 
 def _execute_broker_request(request):
@@ -1965,6 +1996,7 @@ def main():
         return 1
 
     _initialize_command_dispatcher()
+    _initialize_terminal_ipc()
     running = True
     consecutive_empty = 0
     while running:
@@ -2030,6 +2062,8 @@ def shutdown():
     if _shutdown_done:
         return
     _shutdown_done = True
+
+    _close_terminal_ipc()
 
     if _command_broker is not None:
         try:
