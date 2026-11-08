@@ -1,0 +1,29 @@
+# EXAMPLE ONLY: never installed or enabled automatically. Review paths/user first.
+# Terminal must independently opt in with BLINDASSIST_IPC_ENABLED=1 and the SAME
+# BLINDASSIST_IPC_DIRECTORY=/run/blindassist-gateway (outside terminal PrivateTmp).
+# Operator must provision that directory, owned by blindassist, mode 0700, before terminal startup.
+# Do not add Requires/BindsTo/PartOf relationships to the terminal service.
+[Unit]
+Description=Optional BlindAssist loopback communication gateway
+After=network.target
+
+[Service]
+Type=simple
+User=blindassist
+Group=blindassist
+WorkingDirectory=/opt/blindassist
+Environment=BLINDASSIST_IPC_DIRECTORY=/run/blindassist-gateway
+Environment=BLINDASSIST_CREDENTIAL_DIRECTORY=/opt/blindassist/runtime/mobile-gateway
+ExecStart=/opt/blindassist/.venv-gateway/bin/python -m gateway.server
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=10
+
+# No [Install] target: operator must make an explicit deployment decision.

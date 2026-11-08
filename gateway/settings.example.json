@@ -1,0 +1,10 @@
+{
+  "host": "127.0.0.1",
+  "port": 8765,
+  "ipc_directory": "/run/blindassist-gateway",
+  "credential_directory": "/opt/blindassist/runtime/mobile-gateway",
+  "ipc_timeout": 2.0,
+  "body_timeout": 2.0,
+  "max_connections": 8,
+  "max_body_bytes": 4096
+}
