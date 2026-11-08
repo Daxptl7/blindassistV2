@@ -60,6 +60,13 @@ logging.basicConfig(
 logger = logging.getLogger("MainController")
 _shutdown_done = False
 
+# Internal admission only: no transport or new hardware controller.
+_command_broker = None
+_mode_execution_thread = threading.current_thread()
+_mode_execution_depth = 0
+_dispatching_request_id = None
+_mode_failed = False
+
 
 def _load_settings() -> dict:
     from modules.config_loader import load_settings
@@ -1691,8 +1698,140 @@ MODE_MAP = {
 }
 
 
+def _command_capabilities():
+    from gateway.command_models import ModeCapability
+    enabled = _settings.get("enabled_modes", ["1", "2", "3", "4", "5", "6", "8", "9"])
+    required = {"1": ("ocr",), "2": ("ai_query",), "3": ("voice", "ai_query"),
+                "4": ("translator",), "5": ("gesture",), "6": ("objdetect",),
+                "7": ("gps",), "8": ("privacy",), "9": ("mathsolver",)}
+    return {mode: ModeCapability(mode, mode in enabled,
+                                module_loaded=all(_has(name) for name in required.get(mode, ())))
+            for mode in MODE_MAP}
+
+
+def _initialize_command_dispatcher():
+    global _command_broker, _mode_execution_thread
+    _mode_execution_thread = threading.current_thread()
+    try:
+        from gateway.command_broker import CommandBroker
+        from gateway.input_arbiter import InputArbiter
+        InputArbiter(_settings.get("morse_menu_symbol_gap_seconds", 5))
+        _command_broker = CommandBroker(_command_capabilities())
+    except Exception as error:
+        _command_broker = None
+        logger.warning("Internal dispatcher unavailable (%s); keeping standalone input.",
+                       type(error).__name__)
+    return _command_broker
+
+
+def _disable_command_dispatcher():
+    global _command_broker
+    broker, _command_broker = _command_broker, None
+    if broker is not None:
+        try:
+            broker.close()
+        except Exception:
+            pass
+    logger.warning("Internal dispatcher disabled; keeping standalone input.")
+
+
+def _execute_broker_request(request):
+    """Only this execution context invokes modes; handler results stay local."""
+    global _dispatching_request_id
+    from gateway.operation_state import OperationState
+    broker = _command_broker
+    try:
+        if broker is None or not broker.owns_active_request(request):
+            return None
+        if broker.get_status()["terminal_state"] == "SHUTTING_DOWN":
+            broker.finish(request.request_id, OperationState.CANCELLED)
+            return None  # Shutdown won admission; the mode has not been invoked.
+    except Exception:
+        try:
+            broker.finish(request.request_id, OperationState.FAILED, error_code="MODE_EXECUTION_FAILED")
+        except Exception:
+            pass
+        _disable_command_dispatcher()
+        return None  # A broken admission layer cannot authorize a mode.
+    _dispatching_request_id = request.request_id
+    outcome, code = OperationState.COMPLETED, None
+    try:
+        # Existing run_mode performs the final configuration/policy check.
+        if request.parameters["mode"] not in MODE_MAP:
+            outcome, code = OperationState.FAILED, "UNKNOWN_MODE"
+            return None
+        if request.parameters["mode"] not in _settings.get("enabled_modes", list("12345689")):
+            outcome, code = OperationState.FAILED, "MODE_DISABLED"
+            return None
+        result = run_mode(request.parameters["mode"])
+        if _mode_failed:
+            outcome, code = OperationState.FAILED, "MODE_EXECUTION_FAILED"
+        return result  # Never copied into the broker, status or logs.
+    except (KeyboardInterrupt, SystemExit):
+        outcome, code = OperationState.FAILED, "INTERRUPTED"
+        raise
+    except Exception:
+        outcome, code = OperationState.FAILED, "MODE_EXECUTION_FAILED"
+        try:
+            _speak("The operation could not finish. Please check the device and try again.", block=True)
+        except Exception:
+            logger.error("Mode failure notification unavailable.")
+    finally:
+        _dispatching_request_id = None
+        try:
+            broker.finish(request.request_id, outcome, error_code=code)
+        except Exception:
+            _disable_command_dispatcher()
+
+
+def _physical_mode_request(choice):
+    from gateway.command_models import CommandRequest, CommandSource, CommandType
+    from gateway.operation_state import OperationState
+    import uuid
+    try:
+        broker = _command_broker
+        broker.update_capabilities(_command_capabilities())
+        receipt = broker.submit(CommandRequest("physical-" + uuid.uuid4().hex,
+                                CommandType.START_MODE, CommandSource.PHYSICAL_INPUT,
+                                {"mode": choice}))
+        request = broker.take_next() if receipt.state == OperationState.PENDING else None
+    except Exception:
+        _disable_command_dispatcher()
+        return run_mode(choice)
+    if receipt.state == OperationState.REJECTED:
+        if receipt.error_code == "MODE_DISABLED":
+            _speak("This feature is not enabled in this device profile.", block=True)
+            return
+        if receipt.error_code == "TERMINAL_BUSY":
+            _speak("The terminal is busy. Please wait for the current operation.", block=True)
+            return
+        if receipt.error_code == "UNKNOWN_MODE":
+            return
+        # Exhausted/broken bookkeeping must not disable physical operation.
+        _disable_command_dispatcher()
+        return run_mode(choice)
+    if request is not None:
+        return _execute_broker_request(request)
+
+
 def run_mode(choice):
+    global _mode_execution_depth, _mode_failed
+    if threading.current_thread() is not _mode_execution_thread:
+        raise RuntimeError("Modes must execute in the terminal's designated context")
+    if _mode_execution_depth == 0 and _command_broker is not None and _dispatching_request_id is None:
+        return _physical_mode_request(choice)
+    if _mode_execution_depth == 0:
+        _mode_failed = False
+    _mode_execution_depth += 1
+    try:
+        return _run_mode(choice)
+    finally:
+        _mode_execution_depth -= 1
+
+
+def _run_mode(choice):
     """Start processing automatically; completed results choose their output."""
+    global _mode_failed
     from modules.privacy_policy import session_active
     if choice not in MODE_MAP:
         return
@@ -1706,11 +1845,55 @@ def run_mode(choice):
         with processing_session(PUBLIC):
             return MODE_MAP[choice]()
     except Exception as error:
+        _mode_failed = True
         logger.error("Mode failed (%s).", type(error).__name__)
         _speak("The operation could not finish. Please check the device and try again.", block=True)
     finally:
         if _has("voice") and hasattr(_modules["voice"], "clear_private_recordings"):
             _modules["voice"].clear_private_recordings()
+
+def _cooperative_menu_choice():
+    """One queue consumer, only at the main menu; partial input lives across polls."""
+    from gateway.input_arbiter import InputArbiter
+    import select
+    arbiter = InputArbiter(_settings.get("morse_menu_symbol_gap_seconds", 5), clock=time.monotonic)
+    serial, broker = _morse_serial_singleton, _command_broker
+    if serial is not None:
+        _speak("Enter a five-press Morse code. Button 1 is dot; button 2 is dash. "
+               "Keep pauses under five seconds.")
+        deadline = time.monotonic() + 120
+    elif _STDIN_IS_TTY:
+        print("Mode (1-9, 0=quit): ", end="", flush=True)
+        deadline = None  # Preserve unbounded TTY input, without a second reader.
+    else:
+        return None
+    while deadline is None or time.monotonic() < deadline:
+        drained = True
+        if serial is not None:
+            # The first read blocks; drain already-arrived physical events before
+            # considering a simulated request. Never read during a mode handler.
+            for index in range(64):
+                message = serial.get_message(timeout=.1 if index == 0 else 0)
+                if message is None:
+                    break
+                digit = arbiter.feed(message)
+                if digit is not None:
+                    return digit
+            else:
+                drained = False
+        elif select.select([sys.stdin], [], [], .1)[0]:
+            return _keyboard_input("", default=None)
+        if broker is not None:
+            try:
+                broker.update_capabilities(_command_capabilities())
+                request = broker.take_next(allow_dispatch=drained and not arbiter.physical_pending)
+                if request is not None:
+                    return request
+            except Exception:
+                _disable_command_dispatcher()
+                broker = None  # Retain this arbiter's partial physical digit.
+    return None
+
 
 def _get_menu_choice():
     """
@@ -1725,6 +1908,8 @@ def _get_menu_choice():
     Falls back to typing a number on a keyboard only when no Pico W is
     available (e.g. laptop development).
     """
+    if _command_broker is not None:
+        return _cooperative_menu_choice()
     if _morse_serial_singleton is not None:
         _speak("Enter a five-press Morse code. Button 1 is dot; button 2 is dash. "
                "Keep pauses under five seconds.")
@@ -1779,6 +1964,7 @@ def main():
         shutdown()
         return 1
 
+    _initialize_command_dispatcher()
     running = True
     consecutive_empty = 0
     while running:
@@ -1800,6 +1986,10 @@ def main():
                 continue
 
             consecutive_empty = 0
+
+            if not isinstance(choice, str):
+                _execute_broker_request(choice)
+                continue
 
             if choice == '0':
                 # FIX: shutdown is destructive/irreversible, so it requires an
@@ -1840,6 +2030,12 @@ def shutdown():
     if _shutdown_done:
         return
     _shutdown_done = True
+
+    if _command_broker is not None:
+        try:
+            _command_broker.close()
+        except Exception:
+            logger.warning("Internal dispatcher cleanup could not finish.")
 
     logger.info("Shutting down...")
     # Cancel old speech before cleanup or a goodbye can queue behind it.

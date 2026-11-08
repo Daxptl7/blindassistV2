@@ -214,6 +214,12 @@ class CommandBroker:
                 raise ValueError("No matching active operation")
             return self._records[request_id].cancel_event
 
+    def owns_active_request(self, request):
+        self._assert_owner()
+        with self._lock:
+            record = self._records.get(self._active)
+            return record is not None and record.request == request
+
     def finish(self, request_id, state=State.COMPLETED, *, error_code=None):
         self._assert_owner()
         if state not in (State.COMPLETED, State.FAILED, State.CANCELLED):
