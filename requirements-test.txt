@@ -1,4 +1,6 @@
 # Hardware-free regression environment. Device installs use requirements.txt.
+-r requirements-gateway.txt
+httpx>=0.28,<0.29
 numpy>=1.26,<3
 Pillow>=10,<13
 opencv-python-headless>=4.9,<6

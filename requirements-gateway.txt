@@ -1,0 +1,4 @@
+# Optional loopback gateway; install separately from the Raspberry Pi terminal.
+fastapi>=0.127,<0.128
+pydantic>=2.12,<3
+uvicorn>=0.40,<0.41
